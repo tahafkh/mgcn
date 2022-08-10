@@ -14,6 +14,9 @@ def get_args():
                         help='Weight decay (L2 loss on parameters).')
     parser.add_argument('--dropout', type=float, default=0.5,
                         help='Dropout rate (1 - keep probability).')
-    
+    parser.add_argument('--layers', nargs='+', type=str, default=['en', 'de'],
+                        help='Layers in MGCN.')
+    parser.add_argument('--sample_size', type=int, default=200,
+                        help='Sample size.')
 
-    return parser.parse_args()
+    return vars(parser.parse_args())

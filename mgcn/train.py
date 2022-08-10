@@ -93,7 +93,7 @@ def model_stat_struc(preds, reals, metrics, pos_weights, norms, idx=None):
                     print("Exception in F1 for layer" + str(i) + " for structure")
                     stats[metr_name].append(0)
             elif metr_name == 'loss':
-                if args.cuda:
+                if args['cuda']:
                     pw = pos_weights[i] * torch.ones(final_real.size()).cuda()
                 else:
                     pw = pos_weights[i] * torch.ones(final_real.size())
@@ -141,7 +141,7 @@ def train(epoch):
     optimizer.step()
 
     # Validation if needed
-    if not args.fastmode:
+    if not args['fastmode']:
         model.eval()
         classes_pred, bet_layers_pred, in_layers_pred = model(features, adjs)
         stats = dict()
@@ -177,7 +177,7 @@ def test():
 if __name__=='__main__':
     # Training settings
     args = get_args()
-    args.cuda = not args.no_cuda and torch.cuda.is_available()
+    args['cuda'] = not args['no_cuda'] and torch.cuda.is_available()
 
     dataset_str = "infra"
 
@@ -204,7 +204,7 @@ if __name__=='__main__':
     # Weights of layers
     adj_weights.append(n_inputs * [1])
 
-    if args.cuda:
+    if args['cuda']:
         for i in range(n_inputs):
             labels[i] = labels[i].cuda()
 
@@ -223,7 +223,7 @@ if __name__=='__main__':
         for ts in test_sizes:
             idx_trains, idx_vals, idx_tests = trains_vals_tests_split(n_inputs, [s[0] for s in adjs_sizes], val_size=0.1,
                                                                       test_size=ts, random_state=int(run + ts*100))
-            if args.cuda:
+            if args['cuda']:
                 for i in range(n_inputs):
                     idx_trains[i] = idx_trains[i].cuda()
                     idx_vals[i] = idx_vals[i].cuda()
@@ -244,12 +244,12 @@ if __name__=='__main__':
                                         inputs_nfeat=features_sizes,
                                         inputs_nhid=hidden_structure,
                                         inputs_nclass=labels_nclass,
-                                        dropout=args.dropout)
+                                        dropout=args['dropout'])
                             optimizer = optim.Adam(model.parameters(),
                                                    lr=lr, weight_decay=args.weight_decay)
-                            if args.cuda:
+                            if args['cuda']:
                                 model.cuda()
-                            for epoch in range(args.epochs):
+                            for epoch in range(args['epochs']):
                                 train(epoch)
                                 # Testing
                                 test()
