@@ -209,7 +209,7 @@ def pmi(tokenized_tweets, vocab, vocab2id, window_size=10):
         pmi[i][j] = pmi_val
     return pmi
 
-def generate_pmi_edges():
+def create_pmi_edges():
     pass
 
 def tokenize(all_tweets, data):
@@ -217,7 +217,7 @@ def tokenize(all_tweets, data):
         tokenizer = TweetTokenizer()
         tokenized = [tokenizer.tokenize(tweet) for tweet in all_tweets]
         stopwords = nltk.corpus.stopwords.words('english')
-        
+
     elif data == 'de':
         tokenizer = SoMaJo("de_CMC", split_camel_case=True)
         sentences = tokenizer.tokenize_text(all_tweets)
@@ -231,11 +231,12 @@ def tokenize(all_tweets, data):
 def prepare_data(args):
     layers = args['layers']
 
-    for layer in layers:
+    for i, layer in enumerate(layers):
         train, test = read_file(layer)
         train = sample_data(train, args['sample_size'])
         all_tweets = np.concatenate((train['tweet'].values, test['tweet'].values))
-        tokenized = 
+        tokenized = tokenize(all_tweets, layer)
+        
 
 
     
