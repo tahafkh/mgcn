@@ -24,5 +24,7 @@ def get_args():
                         help='Model to use as node features.')
     parser.add_argument('--finetune', type=bool, default=False,
                         help='Whether to finetune the model.')
+    parser.add_argument('--batch_size', type=float, default=128,
+                        help='Batch size.')
 
     return vars(parser.parse_args())

@@ -16,6 +16,14 @@ import nltk
 from nltk.tokenize import TweetTokenizer
 from somajo import SoMaJo
 
+from transformers import (AdamW, \
+        BertForSequenceClassification, BertTokenizer, \
+        XLMForSequenceClassification, XLMTokenizer, \
+        XLMRobertaTokenizer, XLMRobertaModel)
+
+import torch
+from torch.utils.data import DataLoader, TensorDataset
+
 RAW_DATA_DIRECTORY = 'raw_data'
 DATA_DIRECTORY = 'data'
 DATASET = 'sample'
@@ -257,7 +265,7 @@ def create_pmi_edges(tokenized_tweets, vocab, vocab2id, doc_numbers, window_size
 def create_layer_adj(i, layer, args):
     train, test = read_file(layer)
     train = sample_data(train, args['sample_size'])
-    all_tweets = np.concatenate((train['tweet'].values, test['tweet'].values))
+    all_tweets = list(train['tweet'].values) + list(test['tweet'].values)
     doc_numbers = len(all_tweets)
     tokenized = tokenize(all_tweets, layer)
     tfidf_edges, vocab, vocab2id, id2vocab = create_tfidf_edges(tokenized, doc_numbers)
@@ -270,6 +278,7 @@ def create_layer_adj(i, layer, args):
     layer_dict = {
         'train': train,
         'test': test,
+        'all_tweets': all_tweets,
         'tokenized': tokenized,
         'vocab': vocab,
         'vocab2id': vocab2id,
@@ -331,13 +340,76 @@ def create_bet(args, layers_dict):
     for i in range(len(layers) - 1):
         create_layer_bet(i, layers, layers_dict, args)
 
-def create_feature(args, layers_dict):
+def get_model_cls(model):
+    if model == "bert":
+        return "bert-base-multilingual-uncased", BertTokenizer, BertForSequenceClassification
+    elif model == "xlm":
+        return "xlm-mlm-17-1280", XLMTokenizer, XLMForSequenceClassification
+    elif model == "xlmr":
+        return "xlm-roberta-base", XLMRobertaTokenizer, XLMRobertaModel
+    else:
+        raise NameError(f"Unsupported model {model}.")
+
+def create_dataloader(layer, tokenizer, layers_dict, args):
+    encoded_dict = tokenizer.batch_encode_plus(
+            layers_dict[layer]['all_tweets'] + layers_dict[layer]['vocab'],                           
+            add_special_tokens=True,      
+            max_length=args['max_length'],        
+            pad_to_max_length=True,
+            return_attention_mask=True,   
+            return_tensors='pt',
+    )
+    dataset = TensorDataset(encoded_dict["input_ids"], encoded_dict["attention_mask"])
+    return DataLoader(dataset, batch_size=args['batch_size'], shuffle=False)
+
+def create_outputs(model, dataloader):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+
+    model.eval()
+    outputs = []
+    for batch in dataloader:
+        input_ids = batch[0].to(device)
+        input_mask = batch[1].to(device)
+        
+        with torch.no_grad():        
+            out = model(input_ids, 
+                        token_type_ids=None, 
+                        attention_mask=input_mask)
+            outputs.append(out.last_hidden_state[:, 0,:].detach().cpu().numpy())
+
+    return outputs
+
+def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
+    dataloader = create_dataloader(layer, tokenizer, layers_dict, args)
+    outputs = create_outputs(model, dataloader)
+    outputs = np.concatenate(outputs)
+    ids = np.arange(outputs.shape[0]).reshape(-1, 1)
+    labels = list(layers_dict[layer]['train']['label']) + list(layers_dict[layer]['test']['label'])
+    all_labels = np.array([int(label) for label in labels] + \
+        [-1 for _ in range(outputs.shape[0] - len(labels))]).reshape(-1, 1)
+    ids_embeddings = np.append(ids, outputs, 1)
+    ids_embeddings = np.append(ids_embeddings, all_labels, 1)
+    file = f'{DATASET}.feat{i}'
+    file_path = os.path.join(DATA_DIRECTORY, DATASET, file)
+    np.savetxt(file_path, ids_embeddings)
     
+def create_feature(args, layers_dict):
+    model = args['model']
+    layers = args['layers']
+    model_cls, tokenizer_cls, model_cls_fn = get_model_cls(model)
+    tokenizer = tokenizer_cls.from_pretrained(model_cls, do_lower_case=(model == "bert"))
+    num_labels = layers_dict[layers_dict.keys()[0]]['train']['label'].nunique()
+    model = model_cls_fn.from_pretrained(model_cls, num_labels=num_labels)
+    for i, layer in enumerate(layers):
+        create_layer_feature(i, layer, model, tokenizer, layers_dict, args)
 
 def prepare_data(args):
     initialize()
     layers_dict = create_adj(args)
     create_bet(args, layers_dict)
+    create_feature(args, layers_dict)
+    print(f'Data prepared for MGCN.')
 
     
 
