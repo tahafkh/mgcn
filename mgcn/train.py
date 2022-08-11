@@ -11,6 +11,7 @@ import torch.optim as optim
 from sklearn.metrics import f1_score
 
 from utils import load_data, class_accuracy, class_f1, layer_accuracy, layer_f1, dict_to_writer, trains_vals_tests_split
+from data import DATASET, prepare_data
 from cli import get_args
 from models import CCN
 from tensorboardX import SummaryWriter
@@ -179,7 +180,10 @@ if __name__=='__main__':
     args = get_args()
     args['cuda'] = not args['no_cuda'] and torch.cuda.is_available()
 
-    dataset_str = "infra"
+    # Preparing data
+    prepare_data(args)
+
+    dataset_str = DATASET
 
     # parameter
     # All combination of parameters will be tested

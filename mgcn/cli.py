@@ -18,5 +18,11 @@ def get_args():
                         help='Layers in MGCN.')
     parser.add_argument('--sample_size', type=int, default=200,
                         help='Sample size.')
+    parser.add_argument('--method', type=str, default='bidict',
+                        help='Method to compute edges between layers.')
+    parser.add_argument('--model', type=str, default='bert',
+                        help='Model to use as node features.')
+    parser.add_argument('--finetune', type=bool, default=False,
+                        help='Whether to finetune the model.')
 
     return vars(parser.parse_args())

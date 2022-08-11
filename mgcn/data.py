@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from math import *
 
 import pandas as pd
@@ -9,15 +10,15 @@ import emoji
 import wordsegment
 from parsivar import Normalizer
 from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
 
 from nltk.tokenize import TweetTokenizer
 from somajo import SoMaJo
 
-DATA_DIRECTORY = 'raw_data/'
-
-wordsegment.load()
-nltk.download('stopwords')
+RAW_DATA_DIRECTORY = 'raw_data'
+DATA_DIRECTORY = 'data'
+DATASET = 'sample'
 
 def process_tweets(tweets, fa=False):
     # Process tweets
@@ -108,14 +109,14 @@ def read_file(data):
     fa = (data == 'fa')
     if data == 'en':
         train_name = 'olid-training-v1.0.tsv'
-        train = pd.read_csv(os.path.join(DATA_DIRECTORY, train_name), sep='\t', keep_default_na=False)
+        train = pd.read_csv(os.path.join(RAW_DATA_DIRECTORY, train_name), sep='\t', keep_default_na=False)
         train_ids = np.array(train['id'].values)
         train_tweets = np.array(train['tweet'].values)
         train.loc[:, 'subtask_a'] = train['subtask_a'].map({'OFF':1, 'NOT':0})
         train_labels = np.array(train['subtask_a'].values)
 
         test_name = 'testset-levela.tsv'
-        test = pd.read_csv(os.path.join(DATA_DIRECTORY, test_name), sep='\t', keep_default_na=False)
+        test = pd.read_csv(os.path.join(RAW_DATA_DIRECTORY, test_name), sep='\t', keep_default_na=False)
         test_ids = np.array(test['id'].values)
         test_tweets = np.array(test['tweet'].values)
         test.loc[:, 'subtask_a'] = test['subtask_a'].map({'OFF':1, 'NOT':0})
@@ -123,19 +124,22 @@ def read_file(data):
 
     elif data == 'de':
         train_name = 'germeval2018.training.txt'
-        train = pd.read_csv(os.path.join(DATA_DIRECTORY, train_name), sep='\t', keep_default_na=False, header=None)
+        train = pd.read_csv(os.path.join(RAW_DATA_DIRECTORY, train_name), sep='\t', keep_default_na=False, header=None)
         train_ids = np.array(range(1,len(train)+1))
         train_tweets = np.array(train[0].values)
         train.loc[:, 1] = train[1].map({'OFFENSE': 1, 'OTHER': 0})
         train_labels = np.array(train[1].values)
 
         test_name = 'germeval2018.test.txt'
-        test = pd.read_csv(os.path.join(DATA_DIRECTORY, test_name), sep='\t', keep_default_na=False, header=None)
+        test = pd.read_csv(os.path.join(RAW_DATA_DIRECTORY, test_name), sep='\t', keep_default_na=False, header=None)
         test_ids = np.array(range(1,len(test)+1))
         test_tweets = np.array(test[0].values)
         test.loc[:, 1] = test[1].map({'OFFENSE': 1, 'OTHER': 0})
         test_labels = np.array(test[1].values)
     
+    else:
+        raise ValueError(f'Data {data} not supported.')
+
     train_tweets = process_tweets(train_tweets, fa=fa)
     test_tweets = process_tweets(test_tweets, fa=fa)
 
@@ -146,6 +150,38 @@ def read_file(data):
 def sample_data(data, sample_size):
     _, new_data = train_test_split(data, test_size=sample_size, stratify=data['label'], random_state=13)
     return new_data
+
+def tokenize(all_tweets, data):
+    if data == 'en':
+        tokenizer = TweetTokenizer()
+        tokenized = [tokenizer.tokenize(tweet) for tweet in all_tweets]
+        stopwords = nltk.corpus.stopwords.words('english')
+
+    elif data == 'de':
+        tokenizer = SoMaJo("de_CMC", split_camel_case=True)
+        sentences = tokenizer.tokenize_text(all_tweets)
+        tokenized = [[token.text for token in sentence] for sentence in sentences]
+        stopwords = nltk.corpus.stopwords.words('german')
+
+    else:
+        raise ValueError(f'Data {data} not supported.')
+
+    final_tokenized = [[token for token in tweet if token not in stopwords] for tweet in tokenized]
+    return final_tokenized
+
+def create_tfidf_edges(tokenized, doc_numbers):
+    tfidf = TfidfVectorizer(tokenizer=lambda x: x, lowercase=False)
+    tfidf_matrix = tfidf.fit_transform(tokenized)
+    vocab = tfidf.get_feature_names()
+    vocab2id = {vocab[i]:i for i in range(len(vocab))}
+    id2vocab = {i:vocab[i] for i in range(len(vocab))}
+    edges = []
+    for i in range(tfidf_matrix.shape[0]):
+        for j in range(tfidf_matrix.shape[1]):
+            if tfidf_matrix[i,j] > 0:
+                edges.append([i, j + doc_numbers])
+                edges.append([j + doc_numbers, i])
+    return edges, vocab, vocab2id, id2vocab
 
 def pmi(tokenized_tweets, vocab, vocab2id, window_size=10):
     vocab_size = len(vocab)
@@ -209,33 +245,106 @@ def pmi(tokenized_tweets, vocab, vocab2id, window_size=10):
         pmi[i][j] = pmi_val
     return pmi
 
-def create_pmi_edges():
-    pass
+def create_pmi_edges(tokenized_tweets, vocab, vocab2id, doc_numbers, window_size=10):
+    pmi_matrix = pmi(tokenized_tweets, vocab, vocab2id, window_size)
+    edges = []
+    for i in range(pmi.shape[0]):
+        for j in range(pmi.shape[1]):
+            if pmi_matrix[i,j] > 0:
+                edges.append([i + doc_numbers, j + doc_numbers])
+    return edges    
 
-def tokenize(all_tweets, data):
-    if data == 'en':
-        tokenizer = TweetTokenizer()
-        tokenized = [tokenizer.tokenize(tweet) for tweet in all_tweets]
-        stopwords = nltk.corpus.stopwords.words('english')
+def create_layer_adj(i, layer, args):
+    train, test = read_file(layer)
+    train = sample_data(train, args['sample_size'])
+    all_tweets = np.concatenate((train['tweet'].values, test['tweet'].values))
+    doc_numbers = len(all_tweets)
+    tokenized = tokenize(all_tweets, layer)
+    tfidf_edges, vocab, vocab2id, id2vocab = create_tfidf_edges(tokenized, doc_numbers)
+    pmi_edges = create_pmi_edges(tokenized, vocab, vocab2id, doc_numbers)
+    edges = tfidf_edges + pmi_edges
+    file = f'{DATASET}.adj{i}'
+    with open(os.path.join(DATA_DIRECTORY, DATASET, file), 'w') as f:
+        for edge in edges:
+            f.write(f'{edge[0]} {edge[1]}\n')
+    layer_dict = {
+        'train': train,
+        'test': test,
+        'tokenized': tokenized,
+        'vocab': vocab,
+        'vocab2id': vocab2id,
+        'id2vocab': id2vocab,
+        'doc_numbers': doc_numbers,
+    }
+    return layer_dict
 
-    elif data == 'de':
-        tokenizer = SoMaJo("de_CMC", split_camel_case=True)
-        sentences = tokenizer.tokenize_text(all_tweets)
-        tokenized = [[token.text for token in sentence] for sentence in sentences]
-        stopwords = nltk.corpus.stopwords.words('german')
+def initialize():
+    if not os.path.exists(DATA_DIRECTORY):
+        os.makedirs(DATA_DIRECTORY)
+    if not os.path.exists(os.path.join(DATA_DIRECTORY, DATASET)):
+        os.makedirs(os.path.join(DATA_DIRECTORY, DATASET))
+    
+    wordsegment.load()
+    nltk.download('stopwords')
 
-    final_tokenized = [[token for token in tweet if token not in stopwords] for tweet in tokenized]
-    return final_tokenized
+def create_adj(args):
+    layers = args['layers']
+    layers_dict = {}
+    for i, layer in enumerate(layers):
+        layer_dict = create_layer_adj(i, layer, args)
+        layers_dict[layer] = layer_dict
+    return layers_dict
 
+def create_bidict_edges(i, layers, layers_dict, args):
+    first, second = layers[i], layers[i + 1]
+    file = f'{first}2{second}.json'
+    with open(os.path.join(RAW_DATA_DIRECTORY, file)) as json_file:
+        words_dict = json.load(json_file)
+    
+    first_doc_numbers = layers_dict[first]['doc_numbers']
+    second_doc_numbers = layers_dict[second]['doc_numbers']
+    edges = []
+    for word in words_dict:
+        if word in layers_dict[first]['vocab']:
+            first_word_id = layers_dict[first]['vocab2id'][word]
+            similar_words = words_dict[word][:3]
+            for similar_word in similar_words:
+                if similar_word in layers_dict[second]['vocab']:
+                    second_word_id = layers_dict[second]['vocab2id'][similar_word]
+                    edges.append([first_word_id + first_doc_numbers, second_word_id + second_doc_numbers])
+                    edges.append([second_word_id + second_doc_numbers, first_word_id + first_doc_numbers])
+
+    file = f'{DATASET}.bet{i}_{i+1}'
+    with open(os.path.join(DATA_DIRECTORY, DATASET, file), 'w') as f:
+        for edge in edges:
+            f.write(f'{edge[0]} {edge[1]}\n')
+
+def create_layer_bet(i, layers, layers_dict, args):
+    method = args['method']
+    if method == 'bidict':
+        create_bidict_edges(i, layers, layers_dict, args)
+    else:
+        raise ValueError(f'Method {method} not implemented.')
+
+def create_bet(args, layers_dict):
+    layers = args['layers']
+    for i in range(len(layers) - 1):
+        create_layer_bet(i, layers, layers_dict, args)
+
+def create_feature(args, layers_dict):
+    
 
 def prepare_data(args):
-    layers = args['layers']
+    initialize()
+    layers_dict = create_adj(args)
+    create_bet(args, layers_dict)
 
-    for i, layer in enumerate(layers):
-        train, test = read_file(layer)
-        train = sample_data(train, args['sample_size'])
-        all_tweets = np.concatenate((train['tweet'].values, test['tweet'].values))
-        tokenized = tokenize(all_tweets, layer)
+    
+
+
+    
+
+
         
 
 
