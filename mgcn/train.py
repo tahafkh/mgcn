@@ -11,7 +11,8 @@ import torch.optim as optim
 from sklearn.metrics import f1_score
 
 from utils import load_data, class_accuracy, class_f1, layer_accuracy, layer_f1, dict_to_writer, trains_vals_tests_split
-from data import DATASET, prepare_data
+from data import DATASET, DATA_DIRECTORY
+from data import prepare_data
 from cli import get_args
 from models import CCN
 from tensorboardX import SummaryWriter
@@ -205,7 +206,7 @@ if __name__=='__main__':
 
     # Load data
     adjs, adjs_orig, adjs_sizes, adjs_pos_weights, adjs_norms, bet_pos_weights, bet_norms, bet_adjs, bet_adjs_orig, bet_adjs_sizes, \
-    features, features_sizes, labels, labels_nclass = load_data(path="../data/" + dataset_str + "/", dataset=dataset_str)
+    features, features_sizes, labels, labels_nclass = load_data(path=DATA_DIRECTORY + dataset_str + "/", dataset=dataset_str)
     # Number of layers
     n_inputs = len(adjs)
     # Weights of layers
