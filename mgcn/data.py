@@ -399,7 +399,7 @@ def create_feature(args, layers_dict):
     layers = args['layers']
     model_cls, tokenizer_cls, model_cls_fn = get_model_cls(model)
     tokenizer = tokenizer_cls.from_pretrained(model_cls, do_lower_case=(model == "bert"))
-    num_labels = layers_dict[layers_dict.keys()[0]]['train']['label'].nunique()
+    num_labels = layers_dict[list(layers_dict.keys())[0]]['train']['label'].nunique()
     model = model_cls_fn.from_pretrained(model_cls, num_labels=num_labels)
     for i, layer in enumerate(layers):
         create_layer_feature(i, layer, model, tokenizer, layers_dict, args)
