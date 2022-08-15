@@ -409,7 +409,7 @@ def prepare_data(args):
     layers_dict = create_adj(args)
     create_bet(args, layers_dict)
     create_feature(args, layers_dict)
-    print(f'Data prepared for MGCN.')
+    print('Data prepared for MGCN.')
 
     
 
