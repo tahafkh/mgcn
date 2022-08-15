@@ -256,8 +256,8 @@ def pmi(tokenized_tweets, vocab, vocab2id, window_size=10):
 def create_pmi_edges(tokenized_tweets, vocab, vocab2id, doc_numbers, window_size=10):
     pmi_matrix = pmi(tokenized_tweets, vocab, vocab2id, window_size)
     edges = []
-    for i in range(pmi.shape[0]):
-        for j in range(pmi.shape[1]):
+    for i in range(pmi_matrix.shape[0]):
+        for j in range(pmi_matrix.shape[1]):
             if pmi_matrix[i,j] > 0:
                 edges.append([i + doc_numbers, j + doc_numbers])
     return edges    
