@@ -26,5 +26,7 @@ def get_args():
                         help='Whether to finetune the model.')
     parser.add_argument('--batch_size', type=float, default=128,
                         help='Batch size.')
+    parser.add_argument('--max_length', type=int, default=150,
+                        help='Maximum sequence length.')
 
     return vars(parser.parse_args())
