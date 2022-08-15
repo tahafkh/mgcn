@@ -17,9 +17,9 @@ from nltk.tokenize import TweetTokenizer
 from somajo import SoMaJo
 
 from transformers import (AdamW, \
-        BertForSequenceClassification, BertTokenizer, \
-        XLMForSequenceClassification, XLMTokenizer, \
-        XLMRobertaTokenizer, XLMRobertaModel)
+        BertModel, BertTokenizer, \
+        XLMModel, XLMTokenizer, \
+        XLMRobertaModel, XLMRobertaTokenizer)
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -264,8 +264,9 @@ def create_pmi_edges(tokenized_tweets, vocab, vocab2id, doc_numbers, window_size
 
 def create_layer_adj(i, layer, args):
     train, test = read_file(layer)
-    train = sample_data(train, args['sample_size'])
-    all_tweets = list(train['tweet'].values) + list(test['tweet'].values)
+    all_tweets = pd.concat([train, test], ignore_index=True)
+    all_tweets = sample_data(all_tweets, args['sample_size'])
+    all_tweets = list(all_tweets['tweet'].values)
     doc_numbers = len(all_tweets)
     tokenized = tokenize(all_tweets, layer)
     tfidf_edges, vocab, vocab2id, id2vocab = create_tfidf_edges(tokenized, doc_numbers)

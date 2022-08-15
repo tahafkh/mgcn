@@ -20,7 +20,7 @@ def get_args():
                         help='Test sizes.')
     parser.add_argument('--lrs', nargs='+', type=float, default=[0.01],
                         help='Learning rates.')
-    parser.add_argument('--sample_size', type=int, default=200,
+    parser.add_argument('--sample_size', type=int, default=1000,
                         help='Sample size.')
     parser.add_argument('--method', type=str, default='bidict',
                         help='Method to compute edges between layers.')
