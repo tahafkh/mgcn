@@ -206,7 +206,7 @@ if __name__=='__main__':
 
     # Load data
     adjs, adjs_orig, adjs_sizes, adjs_pos_weights, adjs_norms, bet_pos_weights, bet_norms, bet_adjs, bet_adjs_orig, bet_adjs_sizes, \
-    features, features_sizes, labels, labels_nclass = load_data(path=DATA_DIRECTORY + dataset_str + "/", dataset=dataset_str)
+    features, features_sizes, labels, labels_nclass = load_data(path=DATA_DIRECTORY  + "/" + dataset_str + "/", dataset=dataset_str)
     # Number of layers
     n_inputs = len(adjs)
     # Weights of layers
