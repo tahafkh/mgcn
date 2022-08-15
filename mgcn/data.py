@@ -265,8 +265,8 @@ def create_pmi_edges(tokenized_tweets, vocab, vocab2id, doc_numbers, window_size
 def create_layer_adj(i, layer, args):
     train, test = read_file(layer)
     all_tweets = pd.concat([train, test], ignore_index=True)
-    all_tweets = sample_data(all_tweets, args['sample_size'])
-    all_tweets = list(all_tweets['tweet'].values)
+    train_and_test = sample_data(all_tweets, args['sample_size'])
+    all_tweets = list(train_and_test['tweet'].values)
     doc_numbers = len(all_tweets)
     tokenized = tokenize(all_tweets, layer)
     tfidf_edges, vocab, vocab2id, id2vocab = create_tfidf_edges(tokenized, doc_numbers)
@@ -279,6 +279,7 @@ def create_layer_adj(i, layer, args):
     layer_dict = {
         'train': train,
         'test': test,
+        'train_and_test': train_and_test,
         'all_tweets': all_tweets,
         'tokenized': tokenized,
         'vocab': vocab,
@@ -343,9 +344,9 @@ def create_bet(args, layers_dict):
 
 def get_model_cls(model):
     if model == "bert":
-        return "bert-base-multilingual-uncased", BertTokenizer, BertForSequenceClassification
+        return "bert-base-multilingual-uncased", BertTokenizer, BertModel
     elif model == "xlm":
-        return "xlm-mlm-17-1280", XLMTokenizer, XLMForSequenceClassification
+        return "xlm-mlm-17-1280", XLMTokenizer, XLMModel
     elif model == "xlmr":
         return "xlm-roberta-base", XLMRobertaTokenizer, XLMRobertaModel
     else:
@@ -386,7 +387,7 @@ def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
     outputs = create_outputs(model, dataloader)
     outputs = np.concatenate(outputs)
     ids = np.arange(outputs.shape[0]).reshape(-1, 1)
-    labels = list(layers_dict[layer]['train']['label']) + list(layers_dict[layer]['test']['label'])
+    labels = list(layers_dict[layer]['train_and_test']['label'])
     all_labels = np.array([int(label) for label in labels] + \
         [-1 for _ in range(outputs.shape[0] - len(labels))]).reshape(-1, 1)
     ids_embeddings = np.append(ids, outputs, 1)
