@@ -16,6 +16,10 @@ def get_args():
                         help='Dropout rate (1 - keep probability).')
     parser.add_argument('--layers', nargs='+', type=str, default=['en', 'de'],
                         help='Layers in MGCN.')
+    parser.add_argument('--ts', nargs='+', type=float, default=[0.2],
+                        help='Test sizes.')
+    parser.add_argument('--lrs', nargs='+', type=float, default=[0.01],
+                        help='Learning rates.')
     parser.add_argument('--sample_size', type=int, default=200,
                         help='Sample size.')
     parser.add_argument('--method', type=str, default='bidict',

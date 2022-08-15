@@ -199,9 +199,9 @@ if __name__=='__main__':
     hidden_structures = [[[32],[32],[32]]]
     # hidden_structures = [[[16], [16], [16]],[[32], [32], [32]],[[64], [64], [64]],[[128], [128], [128]],[[256], [256], [256]]]
     # Learning rate
-    lrs = [0.01]
+    lrs = args['lrs']
     # test size
-    test_sizes = [0.2]
+    test_sizes = args['ts']
 
     # Load data
     adjs, adjs_orig, adjs_sizes, adjs_pos_weights, adjs_norms, bet_pos_weights, bet_norms, bet_adjs, bet_adjs_orig, bet_adjs_sizes, \
