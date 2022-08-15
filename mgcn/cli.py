@@ -24,7 +24,7 @@ def get_args():
                         help='Sample size.')
     parser.add_argument('--method', type=str, default='bidict',
                         help='Method to compute edges between layers.')
-    parser.add_argument('--model', type=str, default='bert',
+    parser.add_argument('--model', type=str, default='xlmr',
                         help='Model to use as node features.')
     parser.add_argument('--finetune', type=bool, default=False,
                         help='Whether to finetune the model.')
