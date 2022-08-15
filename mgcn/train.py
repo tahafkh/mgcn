@@ -28,10 +28,13 @@ def prepare_output_labels(outputs, labels, idx):
     tmp_labels = []
     tmp_outputs = []
     max_label = 0
+    labels_cpu = [l.clone().detach().cpu() for l in labels]
+    outputs_cpu = [o.clone().detach().cpu() for o in outputs]
+    idx_cpu = [i.clone().detach().cpu() for i in idx]
     for i in range(len(labels)):
-        tmp_labels.extend(labels[i][idx[i]] + max_label)
-        tmp_outputs.extend((outputs[i].max(1)[1].type_as(labels[i]) + max_label)[idx[i]])
-        max_label = labels[i].max()
+        tmp_labels.extend(labels_cpu[i][idx_cpu[i]] + max_label)
+        tmp_outputs.extend((outputs_cpu[i].max(1)[1].type_as(labels_cpu[i]) + max_label)[idx_cpu[i]])
+        max_label = labels_cpu[i].max()
 
     return tmp_outputs, tmp_labels
 
@@ -62,7 +65,7 @@ def model_stat_in_layer_class(in_classes_pred, in_labels, idx, metrics):
 
     tmp_in_classes_pred, tmp_labels = prepare_output_labels(in_classes_pred, in_labels, idx)
     for metr_name, metr_func in metrics.items():
-        if metr_name[:3] == 'all':
+        if metr_name.startswith('all'):
             stats[metr_name] = metr_func(tmp_in_classes_pred, tmp_labels, average=metr_name.split('f1_')[-1])
 
     return stats

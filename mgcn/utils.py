@@ -20,8 +20,6 @@ def encode_onehot(labels):
 
 def load_bet_adj(layer_num1, layer_num2, idx_map_l1, idx_map_l2, path="../data/cora/", dataset="cora"):
     temp = "{}{}.bet" + str(layer_num1) + "_" + str(layer_num2)
-    # print("bet file")
-    # print(temp)
     if not isfile(temp.format(path, dataset)):
         return None
     edges_unordered = np.genfromtxt(temp.format(path, dataset), dtype=np.int32)
@@ -59,8 +57,6 @@ def load_in_adj(layer_num, idx_map=None, path="../data/cora/", dataset="cora"):
     adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
                         shape=(N, N),
                         dtype=np.float32)
-    # print("Edges")
-    # print(np.count_nonzero(adj.toarray()))
     #build symmetric adjacency matrix
     adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
 

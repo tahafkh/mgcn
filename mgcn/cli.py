@@ -3,7 +3,7 @@ import argparse
 def get_args():
     parser = argparse.ArgumentParser(description='MGCN for Offensive Language Detection')
 
-    parser.add_argument('--no-cuda', action='store_true', default=True,
+    parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='Disables CUDA training.')
     parser.add_argument('--fastmode', action='store_true', default=False,
                         help='Validate during training pass.')
