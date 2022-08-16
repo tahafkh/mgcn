@@ -187,7 +187,7 @@ if __name__=='__main__':
     args['cuda'] = not args['no_cuda'] and torch.cuda.is_available()
 
     # Preparing data
-    prepare_data(args)
+    prepare_data(args) if args['prepare'] else None
 
     dataset_str = DATASET
 
