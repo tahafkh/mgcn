@@ -160,7 +160,7 @@ def train(epoch):
 
     print('Epoch: {:04d}'.format(epoch+1),
           'loss_train: {:.4f}'.format(loss_train.item()),
-          'f1_train: {:.4f}'.format(stats['in_class']['f1'][-1]),
+          'f1_macro: {:.4f}'.format(stats['in_class']['f1_macro'][-1]),
           'time: {:.4f}s'.format(time.time() - t))
 
 
@@ -176,7 +176,9 @@ def test():
 
     loss_test = sum([sum(stat['loss']) for stat in stats.values()])
     print("Test set results:",
-          "loss= {:.4f}".format(loss_test.item()))
+          "loss= {:.4f}".format(loss_test.item()),
+          'f1_macro: {:.4f}'.format(stats['in_class']['f1_macro'][-1])
+          )
 
 
 if __name__=='__main__':
