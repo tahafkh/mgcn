@@ -196,12 +196,12 @@ def normalize(mx):
 
 def class_accuracy(output, labels, type=None):
     preds = output.max(1)[1].type_as(labels)
-    return accuracy_score(labels.data, preds)
+    return accuracy_score(labels.cpu().data, preds.cpu())
 
 
 def class_f1(output, labels, type='micro'):
     preds = output.max(1)[1].type_as(labels)
-    return f1_score(labels.data, preds, average=type)
+    return f1_score(labels.cpu().data, preds.cpu(), average=type)
 
 
 def layer_accuracy(output, real, type=None):
