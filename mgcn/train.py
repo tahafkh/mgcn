@@ -254,7 +254,7 @@ if __name__=='__main__':
                                         inputs_nclass=labels_nclass,
                                         dropout=args['dropout'])
                             optimizer = optim.Adam(model.parameters(),
-                                                   lr=lr, weight_decay=args.weight_decay)
+                                                   lr=lr, weight_decay=args['weight_decay'])
                             if args['cuda']:
                                 model.cuda()
                             for epoch in range(args['epochs']):
