@@ -18,9 +18,8 @@ from models import CCN
 from tensorboardX import SummaryWriter
 
 # f1 name should be f1_micro or f1_macro
-# class_metrics = {'loss': F.nll_loss, 'acc': class_accuracy, 'f1_micro': class_f1, 'f1_macro': class_f1,
-#                  'all_f1_micro': f1_score, 'all_f1_macro': f1_score}
-class_metrics = {'loss': F.nll_loss, 'all_f1_micro': f1_score, 'all_f1_macro': f1_score}
+class_metrics = {'loss': F.nll_loss, 'acc': class_accuracy, 'f1_micro': class_f1, 'f1_macro': class_f1,
+                 'all_f1_micro': f1_score, 'all_f1_macro': f1_score}
 layer_metrics = {'loss': torch.nn.BCEWithLogitsLoss()}
 
 
@@ -48,13 +47,13 @@ def model_stat_in_layer_class(in_classes_pred, in_labels, idx, metrics):
             for metr_name,metr_func in metrics.items():
                 if not metr_name in stats:
                     stats[metr_name] = []
-                if metr_name[:2] == 'f1':
+                if metr_name.startswith('f1'):
                     try:
                         stats[metr_name].append(metr_func(in_classes_pred[i][idx[i]], in_labels[i][idx[i]], metr_name.split('f1_')[-1]))
                     except:
                         print("Exception in F1 for class" + str(i) + " for classification")
                         stats[metr_name].append(0)
-                elif metr_name[:3] == 'all':
+                elif metr_name.startswith('all'):
                     continue
                 else:
                     stats[metr_name].append(metr_func(in_classes_pred[i][idx[i]], in_labels[i][idx[i]]))
@@ -161,6 +160,7 @@ def train(epoch):
 
     print('Epoch: {:04d}'.format(epoch+1),
           'loss_train: {:.4f}'.format(loss_train.item()),
+          'f1_train: {:.4f}'.format(stats['in_class']['f1'][-1]),
           'time: {:.4f}s'.format(time.time() - t))
 
 
