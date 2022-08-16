@@ -89,7 +89,6 @@ def load_features_labels(layer_num, path, dataset,N=-1):
 
     features = sp.csr_matrix(features)
     features = sparse_mx_to_torch_sparse_tensor(features)
-    # features = torch.FloatTensor(np.array(features.todense()))
     labels = torch.LongTensor(np.where(labels)[1])
 
     return features, labels, idx_map
