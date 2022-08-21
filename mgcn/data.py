@@ -180,7 +180,7 @@ def tokenize(all_tweets, data):
 def create_tfidf_edges(tokenized, doc_numbers):
     tfidf = TfidfVectorizer(tokenizer=lambda x: x, lowercase=False)
     tfidf_matrix = tfidf.fit_transform(tokenized)
-    vocab = tfidf.get_feature_names()
+    vocab = tfidf.get_feature_names_out()
     vocab2id = {vocab[i]:i for i in range(len(vocab))}
     id2vocab = {i:vocab[i] for i in range(len(vocab))}
     edges = []
