@@ -160,8 +160,13 @@ def train(epoch):
 
     print('Epoch: {:04d}'.format(epoch+1),
           'loss_train: {:.4f}'.format(loss_train.item()),
-          'f1_macro: {:.4f}'.format(stats['in_class']['f1_macro'][-1]),
-          'time: {:.4f}s'.format(time.time() - t))
+          'time: {:.4f}s'.format(time.time() - t),
+          'f1_macro:'
+    )
+    layers = args['layers']
+    for i, layer in enumerate(layers):
+        print("Layer {}: {:.4f}".format(layer, stats['in_class']['f1_macro'][i]))
+
 
 
 def test():
@@ -177,8 +182,11 @@ def test():
     loss_test = sum([sum(stat['loss']) for stat in stats.values()])
     print("Test set results:",
           "loss= {:.4f}".format(loss_test.item()),
-          'f1_macro: {:.4f}'.format(stats['in_class']['f1_macro'][-1])
-          )
+          'f1_macro:'
+    )
+    layers = args['layers']
+    for i, layer in enumerate(layers):
+        print("Layer {}: {:.4f}".format(layer, stats['in_class']['f1_macro'][i]))
 
 
 if __name__=='__main__':
@@ -230,7 +238,8 @@ if __name__=='__main__':
     # Number of runs
     for run in range(args['runs']):
         idx_trains, idx_vals, idx_tests = trains_vals_tests_split(n_inputs, [s[0] for s in adjs_sizes], val_size=0.1,
-                                                                    test_size=test_size, random_state=int(run + test_size*100))
+                                                                    test_size=test_size, train_size=args['train_size'], 
+                                                                    random_state=int(run + test_size*100))
         if args['cuda']:
             for i in range(n_inputs):
                 idx_trains[i] = idx_trains[i].cuda()
