@@ -34,6 +34,6 @@ def get_args():
                         help='Batch size.')
     parser.add_argument('--max_length', type=int, default=150,
                         help='Maximum sequence length.')
-    parser.add_argument('--prepare', action='store_false', default=True,
+    parser.add_argument('--prepare', action='store_true', default=False,
                         help='Whether to prepare the data.')
     return vars(parser.parse_args())
