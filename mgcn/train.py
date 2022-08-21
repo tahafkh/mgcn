@@ -201,11 +201,8 @@ if __name__=='__main__':
     wlambdas = [10]
     # parameter, hidden dimension for every layer should be defined
     hidden_structures = [[[32],[32],[32]]]
-    # hidden_structures = [[[16], [16], [16]],[[32], [32], [32]],[[64], [64], [64]],[[128], [128], [128]],[[256], [256], [256]]]
     # Learning rate
     lrs = args['lrs']
-    # test size
-    test_sizes = args['ts']
 
     # Load data
     adjs, adjs_orig, adjs_sizes, adjs_pos_weights, adjs_norms, bet_pos_weights, bet_norms, bet_adjs, bet_adjs_orig, bet_adjs_sizes, \
@@ -229,42 +226,42 @@ if __name__=='__main__':
                 bet_adjs[i] = bet_adjs[i].cuda()
                 bet_adjs_orig[i] = bet_adjs_orig[i].cuda()
                 bet_pos_weights[i] = bet_pos_weights[i].cuda()
+    test_size = args['test_size']
     # Number of runs
     for run in range(args['runs']):
-        for ts in test_sizes:
-            idx_trains, idx_vals, idx_tests = trains_vals_tests_split(n_inputs, [s[0] for s in adjs_sizes], val_size=0.1,
-                                                                      test_size=ts, random_state=int(run + ts*100))
-            if args['cuda']:
-                for i in range(n_inputs):
-                    idx_trains[i] = idx_trains[i].cuda()
-                    idx_vals[i] = idx_vals[i].cuda()
-                    idx_tests[i] = idx_tests[i].cuda()
-            # Train model
-            t_total = time.time()
-            for wlambda in wlambdas:
-                for adj_weight in adj_weights:
-                    for lr in lrs:
-                        for hidden_structure in hidden_structures:
-                            temp_weight = ['{:.2f}'.format(x) for x in adj_weight]
-                            w_str = '-'.join(temp_weight)
-                            h_str = '-'.join([','.join(map(str, temp)) for temp in hidden_structure])
-                            writer = SummaryWriter('log/' + dataset_str + '_run-'+ str(run)+ '/' + '_lambda-' +
-                                                   str(wlambda) + "_adj_w-" + w_str + "_LR-" + str(lr) +
-                                                             '_hStruc-' + h_str + '_test_size-' + str(ts))
-                            model = CCN(n_inputs=n_inputs,
-                                        inputs_nfeat=features_sizes,
-                                        inputs_nhid=hidden_structure,
-                                        inputs_nclass=labels_nclass,
-                                        dropout=args['dropout'])
-                            optimizer = optim.Adam(model.parameters(),
-                                                   lr=lr, weight_decay=args['weight_decay'])
-                            if args['cuda']:
-                                model.cuda()
-                            for epoch in range(args['epochs']):
-                                train(epoch)
-                                # Testing
-                                test()
-                            print("Optimization Finished!")
-                            print("Total time elapsed: {:.4f}s".format(time.time() - t_total))
+        idx_trains, idx_vals, idx_tests = trains_vals_tests_split(n_inputs, [s[0] for s in adjs_sizes], val_size=0.1,
+                                                                    test_size=test_size, random_state=int(run + test_size*100))
+        if args['cuda']:
+            for i in range(n_inputs):
+                idx_trains[i] = idx_trains[i].cuda()
+                idx_vals[i] = idx_vals[i].cuda()
+                idx_tests[i] = idx_tests[i].cuda()
+        # Train model
+        t_total = time.time()
+        for wlambda in wlambdas:
+            for adj_weight in adj_weights:
+                for lr in lrs:
+                    for hidden_structure in hidden_structures:
+                        temp_weight = ['{:.2f}'.format(x) for x in adj_weight]
+                        w_str = '-'.join(temp_weight)
+                        h_str = '-'.join([','.join(map(str, temp)) for temp in hidden_structure])
+                        writer = SummaryWriter('log/' + dataset_str + '_run-'+ str(run)+ '/' + '_lambda-' +
+                                                str(wlambda) + "_adj_w-" + w_str + "_LR-" + str(lr) +
+                                                            '_hStruc-' + h_str + '_test_size-' + str(test_size))
+                        model = CCN(n_inputs=n_inputs,
+                                    inputs_nfeat=features_sizes,
+                                    inputs_nhid=hidden_structure,
+                                    inputs_nclass=labels_nclass,
+                                    dropout=args['dropout'])
+                        optimizer = optim.Adam(model.parameters(),
+                                                lr=lr, weight_decay=args['weight_decay'])
+                        if args['cuda']:
+                            model.cuda()
+                        for epoch in range(args['epochs']):
+                            train(epoch)
+                            # Testing
+                            test()
+                        print("Optimization Finished!")
+                        print("Total time elapsed: {:.4f}s".format(time.time() - t_total))
 
 

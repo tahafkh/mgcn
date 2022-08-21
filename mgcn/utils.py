@@ -96,10 +96,10 @@ def load_features_labels(layer_num, path, dataset,N=-1):
     return features, labels, idx_map
 
 
-def train_val_test_split(N, val_size=0.2, test_size=0.2, random_state=1):
+def train_val_test_split(N, val_size=0.2, test_size=0.2, random_state=13):
     idx = range(N)
-    idx_test = idx[-arg['test_size']:]
-    idx_train_temp = idx[:-arg['test_size']]
+    idx_test = idx[-test_size:]
+    idx_train_temp = idx[:-test_size]
     if val_size == 0:
         idx_train = idx_train_temp
     else:
