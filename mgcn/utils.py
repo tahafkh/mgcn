@@ -23,10 +23,6 @@ def load_bet_adj(layer_num1, layer_num2, idx_map_l1, idx_map_l2, path="../data/c
     if not isfile(temp.format(path, dataset)):
         return None
     edges_unordered = np.genfromtxt(temp.format(path, dataset), dtype=np.int32)
-    # idx1 = np.array(np.unique(edges_unordered[:,0]), dtype=np.int32)
-    # idx2 = np.array(np.unique(edges_unordered[:, 1]), dtype=np.int32)
-    # idx_map_l1 = {j: i for i, j in enumerate(idx1)}
-    # idx_map_l2 = {j: i for i, j in enumerate(idx2)}
     N1 = len(list(idx_map_l1))
     N2 = len(list(idx_map_l2))
     edges = np.array(list(map(idx_map_l1.get, edges_unordered[:,0])) + list(map(idx_map_l2.get, edges_unordered[:,1])),
