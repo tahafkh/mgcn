@@ -20,18 +20,22 @@ def get_args():
                         help='Test sizes.')
     parser.add_argument('--lrs', nargs='+', type=float, default=[0.01],
                         help='Learning rates.')
-    parser.add_argument('--sample_size', type=int, default=1000,
-                        help='Sample size.')
+    parser.add_argument('--train_size', type=int, default=1000,
+                        help='Train size.')
+    parser.add_argument('--test_size', type=int, default=1000,
+                        help='Test size.')
+    parser.add_argument('--runs', type=int, default=10,
+                        help='Number of runs.')
     parser.add_argument('--method', type=str, default='bidict',
                         help='Method to compute edges between layers.')
     parser.add_argument('--model', type=str, default='xlmr',
                         help='Model to use as node features.')
-    parser.add_argument('--finetune', type=bool, default=False,
+    parser.add_argument('--finetune', action='store_true', default=False,
                         help='Whether to finetune the model.')
     parser.add_argument('--batch_size', type=float, default=128,
                         help='Batch size.')
     parser.add_argument('--max_length', type=int, default=150,
                         help='Maximum sequence length.')
-    parser.add_argument('--prepare', type=bool, default=True,
+    parser.add_argument('--prepare', action='store_false', default=True,
                         help='Whether to prepare the data.')
     return vars(parser.parse_args())

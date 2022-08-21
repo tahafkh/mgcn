@@ -1,3 +1,4 @@
+from ast import arg
 import numpy as np
 import scipy.sparse as sp
 import torch
@@ -96,7 +97,9 @@ def load_features_labels(layer_num, path, dataset,N=-1):
 
 
 def train_val_test_split(N, val_size=0.2, test_size=0.2, random_state=1):
-    idx_train_temp, idx_test = train_test_split(range(N), test_size=test_size, random_state=random_state)
+    idx = range(N)
+    idx_test = idx[-arg['test_size']:]
+    idx_train_temp = idx[:-arg['test_size']]
     if val_size == 0:
         idx_train = idx_train_temp
     else:
@@ -268,5 +271,3 @@ def gather_edges(pos_edges, neg_edges):
     all_edges[0].extend([idx_i[0] for idx_i in neg_edges])
     all_edges[1].extend([idx_i[1] for idx_i in neg_edges])
     return all_edges
-
-

@@ -187,7 +187,8 @@ if __name__=='__main__':
     args['cuda'] = not args['no_cuda'] and torch.cuda.is_available()
 
     # Preparing data
-    prepare_data(args) if args['prepare'] else None
+    if args['prepare']:
+        prepare_data(args)
 
     dataset_str = DATASET
 
@@ -229,7 +230,7 @@ if __name__=='__main__':
                 bet_adjs_orig[i] = bet_adjs_orig[i].cuda()
                 bet_pos_weights[i] = bet_pos_weights[i].cuda()
     # Number of runs
-    for run in range(10):
+    for run in range(args['runs']):
         for ts in test_sizes:
             idx_trains, idx_vals, idx_tests = trains_vals_tests_split(n_inputs, [s[0] for s in adjs_sizes], val_size=0.1,
                                                                       test_size=ts, random_state=int(run + ts*100))
