@@ -234,7 +234,6 @@ if __name__=='__main__':
                 bet_adjs[i] = bet_adjs[i].cuda()
                 bet_adjs_orig[i] = bet_adjs_orig[i].cuda()
                 bet_pos_weights[i] = bet_pos_weights[i].cuda()
-    test_size = args['test_size']
     # Number of runs
     for run in range(args['runs']):
         idx_trains, idx_vals, idx_tests = trains_vals_tests_split(n_inputs, val_size=0.1,
