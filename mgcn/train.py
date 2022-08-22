@@ -255,7 +255,7 @@ if __name__=='__main__':
                         h_str = '-'.join([','.join(map(str, temp)) for temp in hidden_structure])
                         writer = SummaryWriter('log/' + dataset_str + '_run-'+ str(run)+ '/' + '_lambda-' +
                                                 str(wlambda) + "_adj_w-" + w_str + "_LR-" + str(lr) +
-                                                            '_hStruc-' + h_str + '_test_size-' + str(test_size))
+                                                            '_hStruc-' + h_str)
                         model = CCN(n_inputs=n_inputs,
                                     inputs_nfeat=features_sizes,
                                     inputs_nhid=hidden_structure,
