@@ -264,8 +264,8 @@ def create_pmi_edges(tokenized_tweets, vocab, vocab2id, doc_numbers, window_size
 
 def create_layer_adj(i, layer, args):
     train, test = read_file(layer)
-    train = sample_data(train, args['train_size'])
-    test = sample_data(test, args['test_size'])
+    train = sample_data(train, args['train_sizes'][i])
+    test = sample_data(test, args['test_sizes'][i])
     train_and_test = pd.concat([train, test], ignore_index=True)
     all_tweets = list(train_and_test['tweet'].values)
     doc_numbers = len(all_tweets)

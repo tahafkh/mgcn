@@ -18,10 +18,10 @@ def get_args():
                         help='Layers in MGCN.')
     parser.add_argument('--lrs', nargs='+', type=float, default=[0.01],
                         help='Learning rates.')
-    parser.add_argument('--train_size', type=int, default=1000,
-                        help='Train size.')
-    parser.add_argument('--test_size', type=int, default=1000,
-                        help='Test size.')
+    parser.add_argument('--train_sizes', type=int, nargs='+',
+                        help='Train sizes.')
+    parser.add_argument('--test_sizes', type=int, nargs='+',
+                        help='Test sizes.')
     parser.add_argument('--runs', type=int, default=10,
                         help='Number of runs.')
     parser.add_argument('--method', type=str, default='bidict',

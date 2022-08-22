@@ -237,9 +237,9 @@ if __name__=='__main__':
     test_size = args['test_size']
     # Number of runs
     for run in range(args['runs']):
-        idx_trains, idx_vals, idx_tests = trains_vals_tests_split(n_inputs, [s[0] for s in adjs_sizes], val_size=0.1,
-                                                                    test_size=test_size, train_size=args['train_size'], 
-                                                                    random_state=int(run + test_size*100))
+        idx_trains, idx_vals, idx_tests = trains_vals_tests_split(n_inputs, val_size=0.1,
+                                                                    test_sizes=args['test_sizes'], train_sizes=args['train_sizes']
+                                                                    )
         if args['cuda']:
             for i in range(n_inputs):
                 idx_trains[i] = idx_trains[i].cuda()

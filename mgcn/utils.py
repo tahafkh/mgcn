@@ -91,7 +91,7 @@ def load_features_labels(layer_num, path, dataset,N=-1):
     return features, labels, idx_map
 
 
-def train_val_test_split(N, val_size, test_size, train_size, random_state=13):
+def train_val_test_split(val_size, test_size, train_size, random_state=13):
     idx = np.arange(train_size + test_size)
     idx_test = idx[-test_size:]
     idx_train_temp = idx[:-test_size]
@@ -106,12 +106,13 @@ def train_val_test_split(N, val_size, test_size, train_size, random_state=13):
     return idx_train, idx_val, idx_test
 
 
-def trains_vals_tests_split(n_layers, labels_sizes, val_size, test_size, train_size, random_state):
+def trains_vals_tests_split(n_layers, val_size, test_sizes, train_sizes):
     idx_trains = []
     idx_vals = []
     idx_tests = []
     for i in range(n_layers):
-        idx_train, idx_val, idx_test = train_val_test_split(labels_sizes[i], val_size, test_size, train_size, random_state)
+        idx_train, idx_val, idx_test = train_val_test_split(val_size, test_sizes[i], train_sizes[i], 
+                                                            random_state=int(i + test_sizes[i]*100))
         idx_trains.append(idx_train)
         idx_vals.append(idx_val)
         idx_tests.append(idx_test)
