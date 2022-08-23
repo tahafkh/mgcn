@@ -307,8 +307,13 @@ def create_adj(args):
         layers_dict[layer] = layer_dict
     return layers_dict
 
-def create_bidict_edges(i, layers, layers_dict, args):
-    first, second = layers[i], layers[i + 1]
+def create_bidict_edges(args, layers_dict):
+    for file in os.listdir(RAW_DATA_DIRECTORY):
+        if file.endswith(".json"):
+            layers = file[:-5].split('2')
+            create_layer_bidict_edges(layers[0], layers[1], args['layer2id'], layers_dict)
+
+def create_layer_bidict_edges(first, second, layer2id, layers_dict):
     file = f'{first}2{second}.json'
     with open(os.path.join(RAW_DATA_DIRECTORY, file)) as json_file:
         words_dict = json.load(json_file)
@@ -326,22 +331,17 @@ def create_bidict_edges(i, layers, layers_dict, args):
                     edges.append([first_word_id + first_doc_numbers, second_word_id + second_doc_numbers])
                     edges.append([second_word_id + second_doc_numbers, first_word_id + first_doc_numbers])
 
-    file = f'{DATASET}.bet{i}_{i+1}'
+    file = f'{DATASET}.bet{layer2id[first]}_{layer2id[second]}'
     with open(os.path.join(DATA_DIRECTORY, DATASET, file), 'w') as f:
         for edge in edges:
             f.write(f'{edge[0]} {edge[1]}\n')
 
-def create_layer_bet(i, layers, layers_dict, args):
+def create_bet(args, layers_dict):
     method = args['method']
     if method == 'bidict':
-        create_bidict_edges(i, layers, layers_dict, args)
+        create_bidict_edges(args, layers_dict)
     else:
         raise ValueError(f'Method {method} not implemented.')
-
-def create_bet(args, layers_dict):
-    layers = args['layers']
-    for i in range(len(layers) - 1):
-        create_layer_bet(i, layers, layers_dict, args)
 
 def get_model_cls(model):
     if model == "bert":

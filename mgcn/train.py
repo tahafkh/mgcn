@@ -199,7 +199,9 @@ if __name__=='__main__':
         prepare_data(args)
 
     dataset_str = DATASET
-
+    
+    # Layers
+    args['layer2id'] = {layer:i for i, layer in enumerate(args['layers'])}
     # parameter
     # All combination of parameters will be tested
     # adj_weights contains a list of different configs, for example [[1,1,1]] contains one config with equal weights
