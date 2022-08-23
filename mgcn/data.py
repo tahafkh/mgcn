@@ -358,7 +358,7 @@ def create_dataloader(layer, tokenizer, layers_dict, args):
             layers_dict[layer]['all_tweets'] + layers_dict[layer]['vocab'],                           
             add_special_tokens=True,      
             max_length=args['max_length'],        
-            padding='max_length',
+            pad_to_max_length=True,
             return_attention_mask=True,   
             return_tensors='pt',
     )
