@@ -80,7 +80,6 @@ def load_features_labels(layer_num, path, dataset,N=-1):
     #build graph
     idx = np.array(idx_features_labels[:, 0], dtype=np.float32)
     idx = idx.astype(np.int32)
-    print('idx:', idx)
     idx_map = {j: i for i, j in enumerate(idx)}
 
     features = normalize(features)

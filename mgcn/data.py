@@ -329,7 +329,6 @@ def create_layer_bidict_edges(first, second, layer2id, layers_dict):
                 if similar_word in layers_dict[second]['vocab']:
                     second_word_id = layers_dict[second]['vocab2id'][similar_word]
                     edges.append([first_word_id + first_doc_numbers, second_word_id + second_doc_numbers])
-                    edges.append([second_word_id + second_doc_numbers, first_word_id + first_doc_numbers])
 
     file = f'{DATASET}.bet{layer2id[first]}_{layer2id[second]}'
     with open(os.path.join(DATA_DIRECTORY, DATASET, file), 'w') as f:
@@ -388,7 +387,6 @@ def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
     outputs = create_outputs(model, dataloader)
     outputs = np.concatenate(outputs)
     ids = np.arange(outputs.shape[0]).reshape(-1, 1)
-    print('ids = ', ids)
     labels = list(layers_dict[layer]['train_and_test']['label'].values)
     all_labels = np.array([int(label) for label in labels] + \
         [-1 for _ in range(outputs.shape[0] - len(labels))]).reshape(-1, 1)
