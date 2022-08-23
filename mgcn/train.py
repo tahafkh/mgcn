@@ -194,14 +194,15 @@ if __name__=='__main__':
     args = get_args()
     args['cuda'] = not args['no_cuda'] and torch.cuda.is_available()
 
+    # Layers
+    args['layer2id'] = {layer:i for i, layer in enumerate(args['layers'])}
+    
     # Preparing data
     if args['prepare']:
         prepare_data(args)
 
     dataset_str = DATASET
     
-    # Layers
-    args['layer2id'] = {layer:i for i, layer in enumerate(args['layers'])}
     # parameter
     # All combination of parameters will be tested
     # adj_weights contains a list of different configs, for example [[1,1,1]] contains one config with equal weights
