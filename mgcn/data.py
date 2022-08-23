@@ -388,7 +388,7 @@ def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
     outputs = create_outputs(model, dataloader)
     outputs = np.concatenate(outputs)
     ids = np.arange(outputs.shape[0]).reshape(-1, 1)
-    labels = list(layers_dict[layer]['train_and_test']['label'])
+    labels = list(layers_dict[layer]['train_and_test']['label'].values)
     all_labels = np.array([int(label) for label in labels] + \
         [-1 for _ in range(outputs.shape[0] - len(labels))]).reshape(-1, 1)
     ids_embeddings = np.append(ids, outputs, 1)
