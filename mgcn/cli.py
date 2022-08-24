@@ -30,7 +30,7 @@ def get_args():
                         help='Model to use as node features.')
     parser.add_argument('--finetune', action='store_true', default=False,
                         help='Whether to finetune the model.')
-    parser.add_argument('--batch_size', type=float, default=128,
+    parser.add_argument('--batch_size', type=float, default=64,
                         help='Batch size.')
     parser.add_argument('--max_length', type=int, default=150,
                         help='Maximum sequence length.')
