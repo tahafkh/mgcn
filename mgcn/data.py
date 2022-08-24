@@ -384,7 +384,8 @@ def create_outputs(model, dataloader):
                         attention_mask=input_mask)
             hidden_states = out[-1]
             outputs.append(hidden_states[-1][:, 0,:].detach().cpu().numpy())
-
+        
+    model.to('cpu')
     return outputs
 
 def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
