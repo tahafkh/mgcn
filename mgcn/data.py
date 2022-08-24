@@ -188,7 +188,7 @@ def create_tfidf_edges(tokenized, doc_numbers):
         for j in range(tfidf_matrix.shape[1]):
             if tfidf_matrix[i,j] > 0:
                 edges.append([i, j + doc_numbers])
-                edges.append([j + doc_numbers, i])
+    print('TFIDF edges created.')
     return edges, vocab, vocab2id, id2vocab
 
 def pmi(tokenized_tweets, vocab, vocab2id, window_size=10):
@@ -260,6 +260,7 @@ def create_pmi_edges(tokenized_tweets, vocab, vocab2id, doc_numbers, window_size
         for j in range(pmi_matrix.shape[1]):
             if pmi_matrix[i,j] > 0:
                 edges.append([i + doc_numbers, j + doc_numbers])
+    print('PMI edges created.')
     return edges    
 
 def create_layer_adj(i, layer, args):
@@ -288,6 +289,7 @@ def create_layer_adj(i, layer, args):
         'id2vocab': id2vocab,
         'doc_numbers': doc_numbers,
     }
+    print('Layer adjacency matrix created.')
     return layer_dict
 
 def initialize():
@@ -312,6 +314,7 @@ def create_bidict_edges(args, layers_dict):
         if file.endswith(".json"):
             layers = file[:-5].split('2')
             create_layer_bidict_edges(layers[0], layers[1], args['layer2id'], layers_dict)
+    print('Between layer edges created.')
 
 def create_layer_bidict_edges(first, second, layer2id, layers_dict):
     file = f'{first}2{second}.json'
@@ -405,6 +408,7 @@ def create_feature(args, layers_dict):
     model = model_cls_fn.from_pretrained(model_cls, num_labels=num_labels)
     for i, layer in enumerate(layers):
         create_layer_feature(i, layer, model, tokenizer, layers_dict, args)
+    print('Features created.')
 
 def prepare_data(args):
     initialize()

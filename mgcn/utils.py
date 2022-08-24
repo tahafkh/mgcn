@@ -25,7 +25,7 @@ def load_bet_adj(layer_num1, layer_num2, idx_map_l1, idx_map_l2, path="../data/c
     edges_unordered = np.genfromtxt(temp.format(path, dataset), dtype=np.int32)
     N1 = len(list(idx_map_l1))
     N2 = len(list(idx_map_l2))
-    edges = np.array([idx_map_l1[i] for i in edges_unordered[:,0]] + [idx_map_l2[i] for i in edges_unordered[:,1]],
+    edges = np.array(list(map(idx_map_l1.get, edges_unordered[:, 0])) + list(map(idx_map_l2.get, edges_unordered[:, 1])),
                      dtype=np.int32).reshape(edges_unordered.shape, order='F')
     adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
                         shape=(N1, N2),
