@@ -428,6 +428,7 @@ def finetune(model, tokenizer, layer, args, layers_dict):
                 loss = criterion(out[0], labels)
                 loss.backward()
                 optimizer.step()
+    model.to('cpu')
     print('Finetuned.')
 
 
