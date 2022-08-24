@@ -364,7 +364,7 @@ def create_dataloader(tokenizer, args, inputs, labels):
             return_attention_mask=True,   
             return_tensors='pt',
     )
-    dataset = TensorDataset(encoded_dict["input_ids"], encoded_dict["attention_mask"], torch.tensor(labels.values))
+    dataset = TensorDataset(encoded_dict["input_ids"], encoded_dict["attention_mask"], torch.tensor(labels))
     return DataLoader(dataset, batch_size=args['batch_size'], shuffle=False)
 
 def create_outputs(model, dataloader):
@@ -390,13 +390,13 @@ def create_outputs(model, dataloader):
 
 def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
     inputs = layers_dict[layer]['all_tweets'] + layers_dict[layer]['vocab']
-    dataloader = create_dataloader(tokenizer, args, inputs, layers_dict[layer]['train_and_test']['label'])
+    labels = list(layers_dict[layer]['train_and_test']['label'].values)
+    all_labels = np.array([int(label) for label in labels] + \
+        [-1 for _ in range(len(inputs) - len(labels))]).reshape(-1, 1)
+    dataloader = create_dataloader(tokenizer, args, inputs, all_labels)
     outputs = create_outputs(model, dataloader)
     outputs = np.concatenate(outputs)
     ids = np.arange(outputs.shape[0]).reshape(-1, 1)
-    labels = list(layers_dict[layer]['train_and_test']['label'].values)
-    all_labels = np.array([int(label) for label in labels] + \
-        [-1 for _ in range(outputs.shape[0] - len(labels))]).reshape(-1, 1)
     ids_embeddings = np.append(ids, outputs, 1)
     ids_embeddings = np.append(ids_embeddings, all_labels, 1)
     file = f'{DATASET}.feat{i}'
@@ -404,8 +404,8 @@ def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
     np.savetxt(file_path, ids_embeddings)
     
 def finetune(model, tokenizer, layer, args, layers_dict):
-    layer_train = sample_data(layers_dict[layer]['train'], 1000)
-    dataloader = create_dataloader(tokenizer, args, layer_train['tweet'], layer_train['label'])
+    layer_train = sample_data(layers_dict[layer]['train'], 2000)
+    dataloader = create_dataloader(tokenizer, args, layer_train['tweet'], layer_train['label'].values)
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'], weight_decay=args['weight_decay'])
@@ -414,7 +414,7 @@ def finetune(model, tokenizer, layer, args, layers_dict):
     model.to(device)
 
     model.train()
-    epochs = 1
+    epochs = 2
     for epoch in range(epochs):
         for batch in dataloader:
             input_ids = batch[0].to(device)
