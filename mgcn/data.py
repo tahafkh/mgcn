@@ -434,7 +434,7 @@ def finetune(model, tokenizer, layer, args, layers_dict):
 def prepare_model(layer, args, layers_dict):
     model_name, tokenizer_cls, model_cls = get_model_cls(args['model'])
     tokenizer = tokenizer_cls.from_pretrained(model_name, do_lower_case=(args['model'] == "bert"))
-    num_labels = layers_dict[layers_dict[layer]]['train']['label'].nunique()
+    num_labels = layers_dict[layer]['train']['label'].nunique()
     model = model_cls.from_pretrained(model_name, num_labels=num_labels, output_hidden_states=True)
     if args['finetune']:
         finetune(model, tokenizer, layer, args, layers_dict)
