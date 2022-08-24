@@ -364,7 +364,7 @@ def create_dataloader(tokenizer, args, inputs, labels):
             return_attention_mask=True,   
             return_tensors='pt',
     )
-    dataset = TensorDataset(encoded_dict["input_ids"], encoded_dict["attention_mask"], torch.tensor(labels))
+    dataset = TensorDataset(encoded_dict["input_ids"], encoded_dict["attention_mask"], torch.tensor(labels.values))
     return DataLoader(dataset, batch_size=args['batch_size'], shuffle=False)
 
 def create_outputs(model, dataloader):
