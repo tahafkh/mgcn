@@ -404,7 +404,7 @@ def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
     np.savetxt(file_path, ids_embeddings)
     
 def finetune(model, tokenizer, layer, args, layers_dict):
-    layer_train = layers_dict[layer]['train']
+    layer_train = sample_data(layers_dict[layer]['train'], 0.25)
     dataloader = create_dataloader(tokenizer, args, layer_train['tweet'], layer_train['label'])
 
     criterion = torch.nn.CrossEntropyLoss()
