@@ -16,7 +16,7 @@ import nltk
 from nltk.tokenize import TweetTokenizer
 from somajo import SoMaJo
 
-from transformers import (AdamW, \
+from transformers import (
         BertForSequenceClassification, BertTokenizer, \
         XLMForSequenceClassification, XLMTokenizer, \
         XLMRobertaForSequenceClassification, XLMRobertaTokenizer)
@@ -355,7 +355,7 @@ def get_model_cls(model):
     else:
         raise NameError(f"Unsupported model {model}.")
 
-def create_dataloader(tokenizer, args, inputs):
+def create_dataloader(tokenizer, args, inputs, labels):
     encoded_dict = tokenizer.batch_encode_plus(
             inputs,                           
             add_special_tokens=True,      
@@ -364,7 +364,7 @@ def create_dataloader(tokenizer, args, inputs):
             return_attention_mask=True,   
             return_tensors='pt',
     )
-    dataset = TensorDataset(encoded_dict["input_ids"], encoded_dict["attention_mask"])
+    dataset = TensorDataset(encoded_dict["input_ids"], encoded_dict["attention_mask"], torch.tensor(labels))
     return DataLoader(dataset, batch_size=args['batch_size'], shuffle=False)
 
 def create_outputs(model, dataloader):
@@ -388,7 +388,8 @@ def create_outputs(model, dataloader):
     return outputs
 
 def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
-    dataloader = create_dataloader(tokenizer, args, layers_dict[layer]['all_tweets'] + layers_dict[layer]['vocab'])
+    inputs = layers_dict[layer]['all_tweets'] + layers_dict[layer]['vocab']
+    dataloader = create_dataloader(tokenizer, args, inputs, layers_dict[layer]['train_and_test']['label'])
     outputs = create_outputs(model, dataloader)
     outputs = np.concatenate(outputs)
     ids = np.arange(outputs.shape[0]).reshape(-1, 1)
@@ -402,23 +403,47 @@ def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
     np.savetxt(file_path, ids_embeddings)
     
 def finetune(model, tokenizer, layer, args, layers_dict):
-    pass
+    layer_train = layers_dict[layer]['train']
+    dataloader = create_dataloader(tokenizer, args, layer_train['tweet'], layer_train['label'])
+
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=args['lr'], weight_decay=args['weight_decay'])
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    torch.cuda.empty_cache()
+    model.to(device)
+
+    model.train()
+    epochs = 10
+    for epoch in range(epochs):
+        for batch in dataloader:
+            input_ids = batch[0].to(device)
+            input_mask = batch[1].to(device)
+            labels = batch[2].to(device)
+            optimizer.zero_grad()
+
+            with torch.set_grad_enabled(True):
+                out = model(input_ids, 
+                            token_type_ids=None, 
+                            attention_mask=input_mask)
+                loss = criterion(out[0], labels)
+                loss.backward()
+                optimizer.step()
+    print('Finetuned.')
+
 
 def prepare_model(layer, args, layers_dict):
     model_name, tokenizer_cls, model_cls = get_model_cls(args['model'])
-    tokenizer = tokenizer_cls.from_pretrained(model_name)
-    model = model_cls.from_pretrained(model_name, output_hidden_states=True)
+    tokenizer = tokenizer_cls.from_pretrained(model_name, do_lower_case=(args['model'] == "bert"))
+    num_labels = layers_dict[layers_dict[layer]]['train']['label'].nunique()
+    model = model_cls.from_pretrained(model_name, num_labels=num_labels, output_hidden_states=True)
     if args['finetune']:
         finetune(model, tokenizer, layer, args, layers_dict)
+    return model, tokenizer
 
 def create_feature(args, layers_dict):
-    model = args['model']
     layers = args['layers']
-    model_cls, tokenizer_cls, model_cls_fn = get_model_cls(model)
-    tokenizer = tokenizer_cls.from_pretrained(model_cls, do_lower_case=(model == "bert"))
-    num_labels = layers_dict[list(layers_dict.keys())[0]]['train']['label'].nunique()
-    model = model_cls_fn.from_pretrained(model_cls, num_labels=num_labels)
     for i, layer in enumerate(layers):
+        model, tokenizer = prepare_model(layer, args, layers_dict)
         create_layer_feature(i, layer, model, tokenizer, layers_dict, args)
     print('Features created.')
 
@@ -428,14 +453,3 @@ def prepare_data(args):
     create_bet(args, layers_dict)
     create_feature(args, layers_dict)
     print('Data prepared for MGCN.')
-
-    
-
-
-    
-
-
-        
-
-
-    

@@ -78,3 +78,4 @@ class CrossLayer(Module):
         return self.__class__.__name__ + ' (' \
                + str(self.L1_dim) + ' -> ' \
                + str(self.L2_dim) + ')'
+               

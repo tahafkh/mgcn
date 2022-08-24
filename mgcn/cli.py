@@ -16,8 +16,8 @@ def get_args():
                         help='Dropout rate (1 - keep probability).')
     parser.add_argument('--layers', nargs='+', type=str, default=['en', 'de'],
                         help='Layers in MGCN.')
-    parser.add_argument('--lrs', nargs='+', type=float, default=[0.01],
-                        help='Learning rates.')
+    parser.add_argument('--lr', type=float, default=0.01,
+                        help='Learning rate.')
     parser.add_argument('--train_sizes', type=int, nargs='+',
                         help='Train sizes.')
     parser.add_argument('--test_sizes', type=int, nargs='+',

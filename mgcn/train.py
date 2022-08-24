@@ -213,7 +213,7 @@ if __name__=='__main__':
     # parameter, hidden dimension for every layer should be defined
     hidden_structures = [[[32],[32],[32]]]
     # Learning rate
-    lrs = args['lrs']
+    lr = args['lr']
 
     # Load data
     adjs, adjs_orig, adjs_sizes, adjs_pos_weights, adjs_norms, bet_pos_weights, bet_norms, bet_adjs, bet_adjs_orig, bet_adjs_sizes, \
@@ -251,8 +251,7 @@ if __name__=='__main__':
         t_total = time.time()
         for wlambda in wlambdas:
             for adj_weight in adj_weights:
-                for lr in lrs:
-                    for hidden_structure in hidden_structures:
+                for hidden_structure in hidden_structures:
                         temp_weight = ['{:.2f}'.format(x) for x in adj_weight]
                         w_str = '-'.join(temp_weight)
                         h_str = '-'.join([','.join(map(str, temp)) for temp in hidden_structure])
@@ -274,5 +273,3 @@ if __name__=='__main__':
                             test()
                         print("Optimization Finished!")
                         print("Total time elapsed: {:.4f}s".format(time.time() - t_total))
-
-
