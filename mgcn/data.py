@@ -17,9 +17,9 @@ from nltk.tokenize import TweetTokenizer
 from somajo import SoMaJo
 
 from transformers import (AdamW, \
-        BertModel, BertTokenizer, \
-        XLMModel, XLMTokenizer, \
-        XLMRobertaModel, XLMRobertaTokenizer)
+        BertForSequenceClassification, BertTokenizer, \
+        XLMForSequenceClassification, XLMTokenizer, \
+        XLMRobertaForSequenceClassification, XLMRobertaTokenizer)
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -347,17 +347,17 @@ def create_bet(args, layers_dict):
 
 def get_model_cls(model):
     if model == "bert":
-        return "bert-base-multilingual-uncased", BertTokenizer, BertModel
+        return "bert-base-multilingual-uncased", BertTokenizer, BertForSequenceClassification
     elif model == "xlm":
-        return "xlm-mlm-17-1280", XLMTokenizer, XLMModel
+        return "xlm-mlm-17-1280", XLMTokenizer, XLMForSequenceClassification
     elif model == "xlmr":
-        return "xlm-roberta-base", XLMRobertaTokenizer, XLMRobertaModel
+        return "xlm-roberta-base", XLMRobertaTokenizer, XLMRobertaForSequenceClassification
     else:
         raise NameError(f"Unsupported model {model}.")
 
-def create_dataloader(layer, tokenizer, layers_dict, args):
+def create_dataloader(tokenizer, args, inputs):
     encoded_dict = tokenizer.batch_encode_plus(
-            layers_dict[layer]['all_tweets'] + layers_dict[layer]['vocab'],                           
+            inputs,                           
             add_special_tokens=True,      
             max_length=args['max_length'],        
             pad_to_max_length=True,
@@ -369,6 +369,7 @@ def create_dataloader(layer, tokenizer, layers_dict, args):
 
 def create_outputs(model, dataloader):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    torch.cuda.empty_cache()
     model.to(device)
 
     model.eval()
@@ -381,12 +382,13 @@ def create_outputs(model, dataloader):
             out = model(input_ids, 
                         token_type_ids=None, 
                         attention_mask=input_mask)
-            outputs.append(out.last_hidden_state[:, 0,:].detach().cpu().numpy())
+            hidden_states = out[-1]
+            outputs.append(hidden_states[-1][:, 0,:].detach().cpu().numpy())
 
     return outputs
 
 def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
-    dataloader = create_dataloader(layer, tokenizer, layers_dict, args)
+    dataloader = create_dataloader(tokenizer, args, layers_dict[layer]['all_tweets'] + layers_dict[layer]['vocab'])
     outputs = create_outputs(model, dataloader)
     outputs = np.concatenate(outputs)
     ids = np.arange(outputs.shape[0]).reshape(-1, 1)
@@ -399,6 +401,16 @@ def create_layer_feature(i, layer, model, tokenizer, layers_dict, args):
     file_path = os.path.join(DATA_DIRECTORY, DATASET, file)
     np.savetxt(file_path, ids_embeddings)
     
+def finetune(model, tokenizer, layer, args, layers_dict):
+    pass
+
+def prepare_model(layer, args, layers_dict):
+    model_name, tokenizer_cls, model_cls = get_model_cls(args['model'])
+    tokenizer = tokenizer_cls.from_pretrained(model_name)
+    model = model_cls.from_pretrained(model_name, output_hidden_states=True)
+    if args['finetune']:
+        finetune(model, tokenizer, layer, args, layers_dict)
+
 def create_feature(args, layers_dict):
     model = args['model']
     layers = args['layers']
